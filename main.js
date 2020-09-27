@@ -23,8 +23,8 @@ const TOKEN_PATH = 'token.json';
 const JSON_MIME_TYPE = "application/json";
 
 /**
- * Reads 'credentials.json' and returns credential object.
- * @returns {Object} The authorization client credentials.
+ * Reads 'credentials.json' and returns a credential object.
+ * @returns {Object} Authorization client credentials.
  */
 async function getCredentials()
 {
@@ -33,8 +33,8 @@ async function getCredentials()
 }
 
 /**
- * Gets and stores new token after prompting for user authorization.
- * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
+ * Gets and stores a new token after prompting for user authorization.
+ * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get tokens for.
  * @returns {Credentials} Access token.
  */
 async function getAccessToken(oAuth2Client)
@@ -55,7 +55,7 @@ async function getAccessToken(oAuth2Client)
 
 /**
  * Create an OAuth2 client with the given credentials.
- * @returns {google.auth.OAuth2} The OAuth2 client.
+ * @returns {google.auth.OAuth2} OAuth2 client.
  */
 async function getAuth()
 {
@@ -77,7 +77,7 @@ async function getAuth()
     {
         const token = getAccessToken(oAuth2Client);
         oAuth2Client.setCredentials(token);
-        // Store the token to disk for later program executions.
+        // Store the token to the disk for later program executions.
         await fs.writeFile(TOKEN_PATH, JSON.stringify(token));
         console.log('Token stored to', TOKEN_PATH);
         return oAuth2Client;
@@ -93,7 +93,7 @@ async function uploadFiles(auth)
     for (const localFilePath of paths.localFilePaths)
     {
         const filename = path.basename(localFilePath);
-        // 'file ID' if the file exists, 'null' if not.
+        // represents 'file ID' if the file exists, 'null' if not.
         const fileId = await (async function () {
             let pageToken = null;
             while (true)
@@ -120,7 +120,7 @@ async function uploadFiles(auth)
 
         if (fileId == null)
         {
-            // Upload new file.
+            // Upload a new file.
             drive.files.create({
                 requestBody: {
                     name: filename,
