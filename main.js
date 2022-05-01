@@ -4,11 +4,14 @@ const promisify = require("util").promisify;
 const readline = require('readline');
 const { google } = require('googleapis');
 const paths = require("./paths");
-function questionAsync(readline, message)
+function questionAsync(message, rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+}))
 {
     return new Promise(resolve =>
         {
-            readline.question(message, answer => resolve(answer));
+            rl.question(message, answer => resolve(answer));
         }
     );
 }
@@ -48,7 +51,7 @@ async function getAccessToken(oAuth2Client)
         input: process.stdin,
         output: process.stdout,
     });
-    const code = await questionAsync(rl, 'Enter the code from that page here: ');
+    const code = await questionAsync('Enter the code from that page here: ');
     rl.close();
     return await promisify(oAuth2Client.getToken).bind(oAuth2Client)(code);
 }
@@ -70,12 +73,14 @@ async function getAuth()
     try
     {
         const tokenContent = await fs.readFile(TOKEN_PATH);
-        oAuth2Client.setCredentials(JSON.parse(tokenContent));
+        const token = JSON.parse(tokenContent);
+        if (token["expiry_date"] < new Date().getTime()) throw new Error("Token is expired.");
+        oAuth2Client.setCredentials(token);
         return oAuth2Client;
     }
     catch (e)
     {
-        const token = getAccessToken(oAuth2Client);
+        const token = await getAccessToken(oAuth2Client);
         oAuth2Client.setCredentials(token);
         // Store the token to the disk for later program executions.
         await fs.writeFile(TOKEN_PATH, JSON.stringify(token));
@@ -103,6 +108,10 @@ async function uploadFiles(auth)
                     q: `name = '${filename}' and '${paths.dstFolderId}' in parents and trashed = false`,
                     pageToken
                 });
+                
+                //
+                //console.log(`listResult.data.files.length = ${listResult?.data?.files.length}`);
+                //await questionAsync("paused");
                 
                 if ((listResult.data.files ?? []).length > 0)
                 {
